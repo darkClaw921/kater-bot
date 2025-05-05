@@ -1,0 +1,10 @@
+[project]
+name = "kater-bot"
+version = "0.1.0"
+description = "Телеграм бот для WAKE клуба"
+readme = "README.md"
+requires-python = ">=3.12"
+dependencies = [
+    "aiogram",
+    "python-dotenv",
+]
