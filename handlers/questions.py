@@ -46,43 +46,53 @@ async def process_faq_question(callback: CallbackQuery) -> None:
                 for path in existing_paths[1:]:
                     media_group.append(InputMediaPhoto(media=FSInputFile(path)))
                 
-                # Удаляем предыдущее сообщение и отправляем медиа-группу
-                await callback.message.delete()
+                # Отправляем медиа-группу
                 await callback.message.answer_media_group(media=media_group)
                 
-                # Отправляем клавиатуру отдельным сообщением, так как media_group не поддерживает reply_markup
+                # Отправляем клавиатуру отдельным сообщением
                 await callback.message.answer(
                     "Выберите другой вопрос или вернитесь в меню:",
                     reply_markup=get_question_keyboard()
                 )
+                
+                # Удаляем предыдущее сообщение после отправки новых
+                await callback.message.delete()
                 return
-        
-        # Для всех остальных вопросов - стандартное поведение
-        elif faq_item.get("has_photo", False) and "photo_key" in faq_item:
+                
+        # Обработка для всех остальных случаев (с фото или без)
+        if faq_item.get("has_photo", False) and "photo_key" in faq_item:
             photo_path = get_photo_path(faq_item["photo_key"])
             
             if photo_path and os.path.exists(photo_path):
                 # Отправляем фото с ответом
                 photo = FSInputFile(photo_path)
-                await callback.message.delete()
                 await callback.message.answer_photo(
                     photo=photo,
                     caption=response,
                     reply_markup=get_question_keyboard()
                 )
-                return
+            else:
+                # Если фото не найдено, отправляем текст
+                await callback.message.answer(
+                    response,
+                    reply_markup=get_question_keyboard()
+                )
+        else:
+            # Для вопросов без фото
+            await callback.message.answer(
+                response,
+                reply_markup=get_question_keyboard()
+            )
         
-        # Отправляем только текстовый ответ и клавиатуру с вопросами
-        await callback.message.edit_text(
-            response,
-            reply_markup=get_question_keyboard()
-        )
+        # Удаляем предыдущее сообщение после отправки нового
+        await callback.message.delete()
     else:
         # Если вопрос не найден, сообщаем об ошибке
-        await callback.message.edit_text(
+        await callback.message.answer(
             "Извините, информация по этому вопросу временно недоступна.",
             reply_markup=get_question_keyboard()
         )
+        await callback.message.delete()
 
 
 async def back_to_menu(callback: CallbackQuery, state: FSMContext) -> None:
@@ -90,11 +100,13 @@ async def back_to_menu(callback: CallbackQuery, state: FSMContext) -> None:
     Обработчик возврата в главное меню
     """
     await callback.answer()
-    await callback.message.edit_text(
+    await callback.message.answer(
         "Выберите интересующий вас раздел:",
         reply_markup=get_menu_keyboard()
     )
     await state.set_state(UserState.menu)
+    # Удаляем предыдущее сообщение
+    await callback.message.delete()
 
 
 def register_questions_handlers(router: Router) -> None:
