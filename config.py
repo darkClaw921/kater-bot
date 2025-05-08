@@ -9,4 +9,10 @@ BOT_TOKEN = os.getenv("BOT_TOKEN")
 
 # Настройки бота
 BOT_NAME = "СёрфБро"
-COMPANY_NAME = "WAKE.iv от компании NA BOARD" 
+COMPANY_NAME = "WAKE.iv от клуба NA BOARD"
+
+# Информация о графике работы
+WORK_HOURS = {
+    "weekdays": "11:00 до 20:00",
+    "weekend": "10:00 до 20:00"
+} 
